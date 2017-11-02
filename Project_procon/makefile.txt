@@ -1,0 +1,21 @@
+testHelper:  helper.o Frame.o Piece.o testHelper.o  
+	g++ -o testHelper testHelper.o Frame.o Piece.o helper.o
+
+
+Frame.o: Frame.h Frame.cpp 
+	g++ -c Frame.cpp 
+
+Piece.o: Piece.h Piece.cpp 
+	g++ -c Piece.cpp
+
+helper.o: helper.h helper.cpp
+	g++ -c helper.cpp
+
+testHelper.o: testHelper.cpp
+	g++ -c testHelper.cpp
+
+all: testHelper;
+
+clean:
+	rm -f testHelper testHelper.o
+
