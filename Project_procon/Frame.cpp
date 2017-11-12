@@ -26,11 +26,44 @@ Frame::Frame(int numVertices, int id)
         this->vertices[i] = new Dot();
     }
 
-    Frame::calcSquareEdge(this);
+    //Frame::calcSquareEdge(this); Chưa biết tọa độ các đỉnh để mà tính.
 }
 
 Frame::Frame()
 {
+}
+
+Frame::Frame(const Frame &ob) {
+
+    this->numVertices = ob.numVertices;
+    this->id = ob.id;
+
+    this->angles = new float[numVertices];
+    this->vertices = new Dot *[numVertices];
+    this->squareEdge = new int[numVertices];
+
+    for (int i = 0; i < numVertices; i++)
+    {
+        this->vertices[i] = new Dot();
+        this->vertices[i]->x = ob.vertices[i]->x;
+        this->vertices[i]->y = ob.vertices[i]->y;
+
+        this->angles[i] = ob.angles[i];
+
+        this->squareEdge[i] = ob.squareEdge[i];
+    }
+}
+
+Frame::~Frame() {
+    if (this->numVertices == 0 || this->vertices == NULL) return;
+
+    delete[] angles;
+    delete[] squareEdge;
+    
+    for (int i = 0; i < this->numVertices; i++) {
+        delete vertices[i];
+    }
+    delete[] vertices;
 }
 
 void Frame::setCoord(int index, int x, int y)

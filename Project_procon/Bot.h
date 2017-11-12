@@ -8,6 +8,11 @@
 
 using std::vector;
 
+enum SIGNAL_BACKTRACK {
+  FAILURE,
+  SUCCESS
+};
+
 class Bot
 {
   public:
@@ -36,7 +41,13 @@ class Bot
     - Chạy thuật toán backtrack cho Bot để ghép hình. 
     - Chủ yếu cải tiến ở đây để Bot chạy fucken wow shit
     */
-    void backtrack();
+    SIGNAL_BACKTRACK backtrack();
+    /*
+    - Hàm này check xem currentPiece đã hoàn thành hay chưa, đã fit vào Frame hay chưa.
+    */
+    bool isComplete();
+    void addValueToCurrAnswer(int index, ValueIndex *);
+    void undo();
 
   private:
     Frame *frame;

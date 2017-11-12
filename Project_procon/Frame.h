@@ -11,11 +11,22 @@
 
 using std::ostream;
 
+
+
+// Liệt kê thể loại cạnh tại một đỉnh (kề trước và kề kế tiếp).
+//  Vì tại một đỉnh có 2 cạnh kề với nó.
+enum ADJACENT_EDGE {
+  NEXT_EDGE,
+  PREV_EDGE
+}
+
 class Frame
 {
 public:
   Frame();
   Frame(int numVertices, int id);
+  Frame(const Frame &ob);
+  ~Frame();
   // set coord for vectice index th
   void setCoord(int index, int x, int y);
   void setCoord(int index, const Dot &);
