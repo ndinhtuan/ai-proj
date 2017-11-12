@@ -12,6 +12,10 @@
 
 using namespace cv;
 
+#include <vector>
+
+using std::vector;
+
 #include "Frame.h"
 
 class Grid
@@ -28,7 +32,8 @@ class Grid
     Grid(int height, int width, int step);
     ~Grid();
 
-    void showPiece(const Frame *frame);
+    void showPiece(const Frame *frame, int time=0);
+    void showPieceSameTime(const vector<Frame *> &vectFrame, int time=0);
     friend ostream &operator<<(ostream &os, const Grid &grid);
 
   private:

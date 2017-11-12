@@ -1,5 +1,7 @@
 #include "Bot.h"
 #include <iostream>
+using std::cout;
+using std::endl;
 #include <vector>
 
 using std::vector;
@@ -9,7 +11,7 @@ using std::vector;
 // Định nghĩa Epsilon để so sánh 2 góc bằng nhau "không thế so sánh 2 float trực tiếp."
 #define EPSILON 1e-3
 // Để FlIP_MODE là false nếu đề bài cho Piece KHÔNG flip
-#define FLIP_MODE true
+#define FLIP_MODE false
 
 Bot::Bot(int numPieces, Frame *frame, Piece **allPieces)
 {
@@ -23,8 +25,14 @@ Bot::Bot(int numPieces, Frame *frame, Piece **allPieces)
 
         currentDomainPiece.push_back(allPieces[i]);
     }
+
+    grid = new Grid(100, 110, 10);
 }
 
+Bot::~Bot() {
+    delete grid;
+    if (this->currAnswer != NULL) delete this->currAnswer;
+}
 /*
 + Chọn piece đầu tiên cho lời giải, để làm init.
 + chọn piece có số góc ngoái < 180 (góc trong > 180) và khác 90 ít nhất 
@@ -42,8 +50,10 @@ Piece *Bot::chooseInitPiece()
     {
 
         int tmp = allPieces[i]->getNumSpecialAngles();
+        // cout << tmp << endl;
+        // grid->showPiece(allPieces[i]);
 
-        if (minSpecialAngles > tmp)
+        if (minSpecialAngles > tmp && tmp != 0)
         {
 
             minSpecialAngles = tmp;
@@ -57,15 +67,18 @@ Piece *Bot::chooseInitPiece()
     }
 
     int tmp = angleConstraintPieces.size();
-
+    
     if (tmp == 0) 
         return allPieces[0];
 
     int index = 0;
     int minVertices = angleConstraintPieces[0]->getNumVertices();
+    
     for (int i = 1; i < tmp; i++)
-    {
-
+    {   
+        // cout << *angleConstraintPieces[i] << endl;
+        // angleConstraintPieces[i]->showAngles();
+        // grid->showPiece(angleConstraintPieces[i]);
         if (minVertices > angleConstraintPieces[i]->getNumVertices())
         {
 
@@ -74,7 +87,7 @@ Piece *Bot::chooseInitPiece()
         }
     }
 
-    return allPieces[index];
+    return angleConstraintPieces[index];
 }
 
 /*
@@ -136,12 +149,11 @@ int Bot::chooseNextVariabel() {
         - cạnh chung bằng nhau +1
         - cạnh chung không bằng nhau.+0
 */
-vector<ValueIndex*> Bot::getListValues(int index) {
+void Bot::getListValues(int index, vector<ValueIndex*> &listValues) {
 
     int sizeOfDomain = currentDomainPiece.size();
     assert(sizeOfDomain > 0);
 
-    vector<ValueIndex*> listValues;
     vector<ValueIndex*> listNotPriValues; // list value không có ưu tiên
 
     // Lấy thông tin của lời giải hiện tại
@@ -149,7 +161,6 @@ vector<ValueIndex*> Bot::getListValues(int index) {
     Dot **verticesOfCurrAnswer = this->currAnswer->getVertices();
 
     for (int i = 0; i < sizeOfDomain; i++) { // Tìm trong tất cả các Piece chưa ghép
-
         // lấy thông tin của piece đang xét.
         Piece *currPiece = currentDomainPiece[i];
         float *anglesOfCurrPiece = currPiece->getAngles();
@@ -157,7 +168,10 @@ vector<ValueIndex*> Bot::getListValues(int index) {
 
         for (int j = 0; j < currPiece->getNumVertices(); j++) { // Tìm trong tất cả các đỉnh của Piece
 
-            if (this->currAnswer->isPossibleToFill(index, currPiece, j)) { 
+            STYLE_FILL styleFill = this->currAnswer->isPossibleToFill(index, currPiece, j);
+            
+            if (styleFill != NOT_FILL) { 
+                // DONE below
                 // Có thể lắp được ở cạnh LEFT hoặc RIGHT
                 // -> Xem 2 trường hợp cho góc < góc Frame. Để update cho styleShared
                 // -> Có thể tạo 2 khả năng
@@ -165,28 +179,255 @@ vector<ValueIndex*> Bot::getListValues(int index) {
 
                 // styleShared và score để tính riêng.
                 ValueIndex *value = new ValueIndex(currPiece, j, false);
-                this->updateStyleSharedAndScore(index, value);
-                this->pushPriorityQueue(listValues, value);
+                this->updateStyleShared(index, value, styleFill);
+
+                if (value->styleShared==SharedEdgeStyle::BOTH_DIFF_ANGLE) {
+
+                    // thêm một lời giải nữa vì lắp được cả 2 phía.
+                    ValueIndex *value1 = new ValueIndex(currPiece, j, false); 
+
+                    value->styleShared = SharedEdgeStyle::NEXT;
+                    this->pushPriorityQueue(listValues, value);
+                    value1->styleShared = SharedEdgeStyle::PREV;
+                    this->pushPriorityQueue(listValues, value1);
+                }
+                else {
+                    this->updateScore(index, value);
+                    this->pushPriorityQueue(listValues, value);
+                }
             }
 
-            if (this->currAnswer->isPossibleToFillFlip(index, currPiece, j) && FLIP_MODE) { 
+            STYLE_FILL styleFillFlip = this->currAnswer->isPossibleToFillFlip(index, currPiece, j);
+            if (styleFillFlip != NOT_FILL && FLIP_MODE) { 
                 // Nếu lắp được tại index mà có flip
 
                 ValueIndex *value = new ValueIndex(currPiece, j, true);
-                this->updateStyleSharedAndScore(index, value);
-                this->pushPriorityQueue(listValues, value);
+                this->updateStyleShared(index, value, styleFill);
+
+                if (value->styleShared==SharedEdgeStyle::BOTH_DIFF_ANGLE) {
+
+                    // thêm một lời giải nữa vì lắp được cả 2 phía.
+                    ValueIndex *value1 = new ValueIndex(currPiece, j, true); 
+
+                    value->styleShared = SharedEdgeStyle::NEXT;
+                    this->pushPriorityQueue(listValues, value);
+                    value1->styleShared = SharedEdgeStyle::PREV;
+                    this->pushPriorityQueue(listValues, value1);
+                }
+                else {
+                    this->updateScore(index, value);
+                    this->pushPriorityQueue(listValues, value);
+                }
+
             }
+
         }
+
     }
 
-    return listValues;
+    
+}
+
+
+
+// Done
+
+/*
+  Ưu tiên : (đã có styleShared)
+    - khít góc (đều chung 2 cạnh) +3
+        - cạnh chung bằng nhau +1
+        - cạnh không bằng nhau +0
+    - chỉ chung 1 cạnh +1
+        - cạnh chung bằng nhau +1
+        - cạnh chung không bằng nhau.+0
+*/
+void Bot::updateScore(int index, ValueIndex *value) {
+
+    assert(value->piece != NULL); // Đã có lời giải
+
+    if (value->styleShared == SharedEdgeStyle::EQUAL_ANGLE) value->score += 3;
+    else value->score += 1;
+
+    if (value->styleShared==SharedEdgeStyle::PREV) {
+        if (
+            value->piece->getSquareEdge()[(value->indexPiece - 1 + value->piece->getNumVertices())
+                %value->piece->getNumVertices()] 
+                == 
+            this->currAnswer->getSquareEdge()[(index - 1 + this->currAnswer->getNumVertices()) 
+                % this->currAnswer->getNumVertices()]
+            )
+            value->score += 1;
+    }
+        
+    if (value->styleShared==SharedEdgeStyle::NEXT) {
+        if (
+            value->piece->getSquareEdge()[(value->indexPiece + 1) %value->piece->getNumVertices()] 
+                == 
+            this->currAnswer->getSquareEdge()[(index + 1) % this->currAnswer->getNumVertices()]
+            )
+            value->score += 1;
+    }
+}
+
+// đã có Piece và indexofPiece
+void Bot::updateStyleShared(int index, ValueIndex *value, STYLE_FILL styleFill) {
+
+    if (styleFill == EQUAL) { 
+        // trường hợp góc bằng 
+        value->styleShared = SharedEdgeStyle::EQUAL_ANGLE;
+    }
+
+    if (styleFill == SMALLER_AND_PREV) {
+        value->styleShared = SharedEdgeStyle::PREV;
+    }
+
+    if (styleFill == SMALLER_AND_NEXT) {
+        value->styleShared = SharedEdgeStyle::NEXT;
+    }
+
+    if (styleFill == SMALLER_AND_BOTH) {
+        value->styleShared = SharedEdgeStyle::BOTH_DIFF_ANGLE;
+    }
+
 }
 
 /*
++ Chạy backtrack cho Bot
+*/
+SIGNAL_BACKTRACK Bot::backtrack() {
+
+    if (isComplete()) return SUCCESS;
+    
+    //Lấy đỉnh tiếp theo để ghép hình
+    int nextIndex = this->chooseNextVariabel();
+    // Lấy tập hình có thể ghép vào.
+    vector<ValueIndex *> valueDomain;
+    this->getListValues(nextIndex, valueDomain);
+    std::cout << "Value domain : " << valueDomain.size() << std::endl;
+
+    for (int i = 0; i < valueDomain.size(); i++) {
+        cout << "Try " << i << " : " << endl;
+        ValueIndex *value = valueDomain[i];
+        //vector<Frame*> vec; vec.push_back(value->piece); vec.push_back(currAnswer); 
+        //grid->showPiece(currAnswer, 0);
+        Piece *tmp = new Piece(*currAnswer);
+        // Ghép thử vào lời giải
+        cout << "Try add Piece "  << endl;
+        cout << "Nhin day : " << tmp->getSquareEdge()[1] << endl;
+        this->addValueToCurrAnswer(nextIndex, value);
+        //Frame::calcSquareEdge(tmp); 
+        cout << "Nhin day : " << tmp->getSquareEdge()[1] << endl;
+        cout << "Nhin day : " << this->currAnswer->getAngles()[1] << endl;
+        grid->showPiece(this->currAnswer, 0);
+        cout << "Try done!" << endl;
+        cout << *this->currAnswer << endl;
+        //grid->showPiece(this->currAnswer, 0);
+        cout << "OKEEE" << endl;
+        this->erasePieceInCurrDomain(value->piece);
+        cout << "Erase Piece ok." << endl;
+        //cNOTE: Có thể dùng thêm phép suy luận của Minh óc chó để loại luôn nhánh 
+
+        // Lấy kết quả của bước ghép hình tiếp
+        SIGNAL_BACKTRACK result = this->backtrack();
+        if (result != FAILURE) return SUCCESS;
+        cout << this->currAnswer->getVertices()[0]->x << endl;
+
+        // Do không ghép được nên gỡ cái mảnh vừa ghép thử vào ra.
+        //this->undo();
+        this->currentDomainPiece.push_back(value->piece);
+        cout << "Delete linh tinh" << endl;
+        this->currAnswer->assign(tmp);
+        cout << "Khong delete duoc" << endl;
+        cout << this->currAnswer->getSquareEdge()[1];
+        cout << tmp->getSquareEdge()[1];
+        delete tmp;
+    }
+
+    // Không lắp được Tại đỉnh index.
+    return FAILURE;
+}
+
+//DONE
+/*
+- Check xem đã fit vào Frame hay chưa. Tìm hình chữ nhật bao quanh currentPiece xem nó có chiều dài 
+    và chiều rộng bằng Frame hay không. 
+- Nếu chưa lắp hết (Miền Piece vẫn còn) thì trả về false
+*/
+bool Bot::isComplete() {
+    return false;
+}
+
+// Done
+/*
+- Hàm này ghép thử value vào vị trí index 
+*/
+void Bot::addValueToCurrAnswer(int index, ValueIndex *value) {
+
+    Piece *transitedPiece = new Piece(*(value->piece));
+    cout << "Add 1 " << endl;
+    switch(value->styleShared) {
+        case SharedEdgeStyle::EQUAL_ANGLE: 
+        value->piece->transition(this->currAnswer, index, value->indexPiece, 
+            STYLE_FILL::EQUAL, transitedPiece);
+        break;
+
+        case SharedEdgeStyle::NEXT : 
+            cout << "F1" << endl;
+        value->piece->transition(this->currAnswer, index, value->indexPiece, 
+            STYLE_FILL::SMALLER_AND_NEXT, transitedPiece);
+            cout << "HELLE";
+        break;
+
+        case SharedEdgeStyle::PREV : 
+        value->piece->transition(this->currAnswer, index, value->indexPiece, 
+            STYLE_FILL::SMALLER_AND_PREV, transitedPiece);
+        break;
+    }
+    cout << "Add 2" << endl;
+    Piece *resultUnion = NULL;
+    this->currAnswer->unionOtherPiece(transitedPiece, resultUnion);
+    this->currAnswer->assign(resultUnion);
+    Frame::calcSquareEdge(this->currAnswer);
+    this->currAnswer->calcAngle();
+
+    delete transitedPiece;
+    assert(resultUnion != NULL);
+    delete resultUnion;
+}
+
+void Bot::erasePieceInCurrDomain(Piece *piece) {
+
+    int index = 0;
+
+    for (int i = 0; i < this->currentDomainPiece.size(); i++) {
+        if (currentDomainPiece[i] == piece) {
+            index = i;
+            break;
+        }
+
+    }
+
+    for (int i = index; i < this->currentDomainPiece.size() - 1; i++) {
+        this->currentDomainPiece[i] = this->currentDomainPiece[i+1];
+    }
+
+    this->currentDomainPiece.pop_back();
+}
+
+
+void Bot::run() {
+    Piece *initPiece = (this->chooseInitPiece());
+    this->currAnswer = new Piece(*initPiece);
+    this->erasePieceInCurrDomain(this->currAnswer);
+    // grid->showPiece(this->chooseInitPiece());
+    this->backtrack();
+}
+
+  /*
 + Thêm 1 phần tử vào priority Queue
     Phần tử nào có score lớn hơn thì nổi lên đầu.
 */
-void pushPriorityQueue(vector<ValueIndex*> &listValues, ValueIndex *value) {
+void Bot::pushPriorityQueue(vector<ValueIndex*> &listValues, ValueIndex *value) {
 
     assert(value != NULL);
     listValues.push_back(value);
@@ -200,78 +441,4 @@ void pushPriorityQueue(vector<ValueIndex*> &listValues, ValueIndex *value) {
         listValues[index - 1] = tmp;
         index--;
     }
-}
-
-// TO-DO
-
-/*
-+ Tính điểm dựa trên 
-  Ưu tiên : 
-    - khít góc (đều chung 2 cạnh) +3
-        - cạnh chung bằng nhau +1
-        - cạnh không bằng nhau +0
-    - chỉ chung 1 cạnh +1
-        - cạnh chung bằng nhau +1
-        - cạnh chung không bằng nhau.+0
-*/
-void Bot::updateStyleSharedAndScore(int index, ValueIndex *value) {
-
-    assert(value->piece != NULL); // Đã có lời giải
-}
-
-/*
-+ Chạy backtrack cho Bot
-*/
-SIGNAL_BACKTRACK Bot::backtrack() {
-
-    if (isComplete()) return SUCCESS;
-    
-    //Lấy đỉnh tiếp theo để ghép hình
-    int nextIndex = this->chooseNextVariabel();
-    // Lấy tập hình có thể ghép vào.
-    vector<ValueIndex *> valueDomain= this->getListValues(nextIndex);
-
-    for (int i = 0; i < valueDomain.size(); i++) {
-        ValueIndex *value = valueDomain[i];
-        // Ghép thử vào lời giải
-        this->addValueToCurrAnswer(nextIndex, value);
-        //NOTE: Có thể dùng thêm phép suy luận của Minh óc chó để loại luôn nhánh 
-
-        // Lấy kết quả của bước ghép hình tiếp
-        SIGNAL_BACKTRACK result = this->backtrack();
-        if (result != FAILURE) return SUCCESS;
-
-        // Do không ghép được nên gỡ cái mảnh vừa ghép thử vào ra.
-        this->undo();
-    }
-
-    // Không lắp được Tại đỉnh index.
-    return FAILURE;
-}
-
-//TO_DO
-/*
-- Check xem đã fit vào Frame hay chưa. Tìm hình chữ nhật bao quanh currentPiece xem nó có chiều dài 
-    và chiều rộng bằng Frame hay không. 
-- Nếu chưa lắp hết (Miền Piece vẫn còn) thì trả về false
-*/
-bool Bot::isComplete() {
-    return false;
-}
-
-// TO-DO
-/*
-- Hàm này ghép thử value vào vị trí index 
-*/
-void Bot::addValueToCurrAnswer(int index, ValueIndex *value) {
-
-
-}
-
-// TO-DO 
-/*
-- Hàm này đối ngược với hàm addValueToCurAnswer (), nó gỡ mảnh ghép vào nhưng không thành công ra.
-*/
-void Bot::undo() {
-
 }

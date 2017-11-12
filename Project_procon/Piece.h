@@ -6,6 +6,7 @@
 #ifndef PIECE_H
 #define PIECE_H
 #include "Frame.h"
+#include "Grid.h"
 
 /*
 + Style Fill mô tả giá trị trả về cho hàm isPossibleFill. Dựa vào 
@@ -30,6 +31,7 @@ class Piece: public Frame{
 public:
     Piece();
     Piece(int numVertices, int id);
+    //~Piece();
     /*
      - Hàm này kiểm tra xem otherPiece có khả năng lắp vào được pieie không
         tại index của piece và indexOfOthePiece của otherPiece
@@ -55,7 +57,7 @@ public:
      Thử xem có bị overlap khi lắp hình hiện tại với hình otherPiece tại index của 
         hình hiện tại và indexOfOtherPiece của otherPiece theo style styleFill.
     */
-    bool isOverlap(int index, Piece *otherPiece, int indexOfOtherPiece, STYLE_FILL &styleFill);
+    bool isOverlap(Piece *otherPiece);
 
     // center là tâm để xoay là một đỉnh của hình
     // newPiece là tọa độ mới sau khi xoay
@@ -72,6 +74,24 @@ public:
     Clone bộ nhớ của ob vào bộ nhớ của mình.
     */
     void cloneSamePieceToMyMemory(Piece *ob);
-};
+    // Gán piece hiện tại cho thằng khác (ob)
+    // nó sẽ delete piece hiện tại và tạo bộ nhớ mới.
+    void assign(const Piece *ob);
 
+    // Phải transition trước khi nối.
+    void unionOtherPiece(Piece *otherPiece, Piece* &result);
+    // Loại đỉnh giữa trong 3 điểm thằng hàng ra.
+    void eliminate3DotInLine();
+    bool transition2(Piece* mainPiece, int indexOfMainPiece, int myIndex, STYLE_FILL styleFill, Piece* &result);
+    void move(Dot* a);
+    void rotate90ClockWise(Dot* center);
+    bool checkIsClockWise();
+
+    /*
+    + Theo thứ tự 3 đỉnh ABC (prev, đỉnh, next)
+    + thuật : xBA / xCB = yBA / yCB
+    */
+    static bool is3DotInLine(Dot *dotA, Dot *dotB, Dot *dotC);
+    static Grid *grid;
+};
 #endif

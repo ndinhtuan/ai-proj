@@ -16,10 +16,11 @@ của frame.
     + Theo cạnh trước của đỉnh (i, i+1) -> chỉ hợp với 1 cạnh
     + Theo canh sau của đỉnh (i, i-1) -> chỉ hợp với 1 cạnh
 */
-enum SharedEdgeStyle {
-    BOTH, // 2 piece khít nhau tại đỉnh đang xét 
-    RIGHT, // cạnh trước của đỉnh chung (tạo ra bởi 2 đỉnh i và i + 1)
-    LEFT  // cạnh trước của đỉnh chung (tạo ra bởi 2 đỉnh i và i - 1)
+enum class SharedEdgeStyle {
+    EQUAL_ANGLE, // 2 Piece khít nhau tại đỉnh đang xét, do có góc bằng nhau 
+    BOTH_DIFF_ANGLE, // piece có thể lắp vào RIGHT hoặc LEFT
+    NEXT, // cạnh trước của đỉnh chung (tạo ra bởi 2 đỉnh i và i + 1)
+    PREV  // cạnh trước của đỉnh chung (tạo ra bởi 2 đỉnh i và i - 1)
 };
 
 struct ValueIndex {
@@ -33,14 +34,8 @@ struct ValueIndex {
     score để đánh giá điểm của Value để đưa vào priorityQueue
     */
     int score;
-
+    // public:
     ValueIndex(Piece *, int, bool);
 };
 
-ValueIndex::ValueIndex(Piece *piece, int index, bool flip) {
-
-    this->piece = piece;
-    this->indexPiece = index;
-    this->flip = flip;
-}
 #endif

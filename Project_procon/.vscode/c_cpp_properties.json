@@ -32,7 +32,8 @@
                 "/usr/include",
                 "/usr/include/x86_64-linux-gnu",
                 "${workspaceRoot}",
-                "/usr/include/linux"
+                "/usr/include/linux",
+                "/home/tuan/Desktop/book 2017-2018/AI/ai-proj/Project_procon/"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",

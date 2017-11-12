@@ -18,7 +18,7 @@ using std::ostream;
 enum ADJACENT_EDGE {
   NEXT_EDGE,
   PREV_EDGE
-}
+};
 
 class Frame
 {
@@ -31,10 +31,15 @@ public:
   void setCoord(int index, int x, int y);
   void setCoord(int index, const Dot &);
 
-  // TO-DO
+  void crossed( Dot* a, Dot* a2, Dot* a3,int &right, int &left);
+  bool insideAngle( Dot *vertice);
+
+  // DONE.
   // calculate float* angles, base on Dot **vertices
   // Need to check parse data for vertices BEFORE calculae angles
   void calcAngle();
+  void calcSquareEdge();
+  void move(Dot *a);
   // Lấy giá trị của numVertices
   int getNumVertices() const
   {
@@ -48,12 +53,18 @@ public:
   {
     return this->angles;
   }
+  int* getSquareEdge() const {
+    return this->squareEdge;
+  }
 
   // Đếm số góc có giá trị > 180 và khác 270
   int getNumSpecialAngles();
 
   friend ostream &operator<<(ostream &os, const Frame &);
   const Frame &operator=(const Frame &);
+  void reverseDot(int begin, int end);
+  void flip(Frame *result);
+  void showAngles();
 
   static void calcSquareEdge(Frame *);
 

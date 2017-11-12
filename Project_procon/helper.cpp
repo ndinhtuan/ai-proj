@@ -41,6 +41,9 @@ void parseInput(const char *filePath, Frame *&frame, Piece **&pieces, int &numPi
             fileData >> x >> y;
             pieces[i]->setCoord(j, x, y); // set coordition for i th vertice.
         }
+
+        pieces[i]->calcAngle();
+        Frame::calcSquareEdge(pieces[i]);
     }
 
     // read data for frame

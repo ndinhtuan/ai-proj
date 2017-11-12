@@ -43,7 +43,7 @@ Grid::~Grid()
         delete grid;
     }
 }
-void Grid::showPiece(const Frame *frame)
+void Grid::showPiece(const Frame *frame, int time)
 {
 
     assert(grid != NULL);
@@ -56,12 +56,15 @@ void Grid::showPiece(const Frame *frame)
     {
 
         Point pt1 = Point(vertices[i]->x * step, vertices[i]->y * step);
+        if (i == 0) {
+            circle(img, pt1, 2, Scalar(0, 255, 0), -1);
+        }
         Point pt2 = Point(vertices[(i + 1) % numVertices]->x * step, vertices[(i + 1) % numVertices]->y * step);
         line(img, pt1, pt2, Scalar(0, 0, 255), 2);
     }
-
     imshow("Piece", img);
-    waitKey(0);
+    waitKey(time);
+    destroyWindow("Piece");
 }
 
 ostream &operator<<(ostream &os, const Grid &grid)
@@ -69,4 +72,30 @@ ostream &operator<<(ostream &os, const Grid &grid)
 
     os << *(grid.grid) << endl;
     return os;
+}
+
+void Grid::showPieceSameTime(const vector<Frame *> &vectFrame, int time) {
+
+    assert(grid != NULL);
+    Mat img = (*grid).clone();
+
+    for (int i = 0; i < vectFrame.size(); i++) {
+
+        int numVertices = vectFrame[i]->getNumVertices();
+        Dot **vertices = vectFrame[i]->getVertices();
+        for (int j = 0; j < numVertices; j++)
+        {
+    
+            Point pt1 = Point(vertices[j]->x * step, vertices[j]->y * step);
+            if (j == 0) {
+                circle(img, pt1, 3, Scalar(0, 255, 0), -1);
+            }
+            Point pt2 = Point(vertices[(j + 1) % numVertices]->x * step, vertices[(j + 1) % numVertices]->y * step);
+            line(img, pt1, pt2, Scalar(0, 0, 255), 2);
+        }
+    }
+
+    imshow("Piece", img);
+    waitKey(time);
+    destroyWindow("Piece"); 
 }

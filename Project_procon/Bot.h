@@ -1,10 +1,10 @@
 #ifndef BOT_H
 #define BOT_H
 
-#include "Frame.h"
 #include "Piece.h"
 #include "ValueIndex.h"
 #include <vector>
+#include "Grid.h"
 
 using std::vector;
 
@@ -15,7 +15,8 @@ enum SIGNAL_BACKTRACK {
 
 class Bot
 {
-  public:
+public:
+   
     Bot(int numPieces, Frame *frame, Piece **allPieces);
     ~Bot();
 
@@ -36,7 +37,7 @@ class Bot
     @ trả về list các phương án có thể phù hợp với currentPiece tại đỉnh index
       - Priority queue
     */
-    vector<ValueIndex*> getListValues(int index);
+    void getListValues(int index, vector<ValueIndex*> &listValues);
     /*
     - Chạy thuật toán backtrack cho Bot để ghép hình. 
     - Chủ yếu cải tiến ở đây để Bot chạy fucken wow shit
@@ -48,7 +49,9 @@ class Bot
     bool isComplete();
     void addValueToCurrAnswer(int index, ValueIndex *);
     void undo();
-
+    void init(Piece **allPiece, int numPieces, Frame *frame);
+    void run();
+    void pushPriorityQueue(vector<ValueIndex*> &listValues, ValueIndex *value);
   private:
     Frame *frame;
     Piece **allPieces;
@@ -62,15 +65,19 @@ class Bot
       currentDomainPiece.
     */
     vector<Piece*> currentDomainPiece;
-  private:
+    Grid *grid;
 
-    void pushPriorityQueue(vector<ValueIndex*> &listValues, ValueIndex *value);
+  private:
     /*
       - Update styleShared và Score cho một giá trị phù hợp với đỉnh index (sau khi đã check phù hợp)
       @value tham số này đã được thiết lập giá trị piece, indexPiece và flip.
         Dùng các dữ kiện trên và index của currAnswer để update styleShared và Score.
     */
-    void updateStyleSharedAndScore(int index, ValueIndex *value);
-};
+    void updateScore(int index, ValueIndex *value);
+    void updateStyleShared(int index, ValueIndex *value, STYLE_FILL styleFill);
+    void erasePieceInCurrDomain(Piece *piece);
+  };
+  
+
 
 #endif

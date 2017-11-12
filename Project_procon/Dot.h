@@ -4,6 +4,10 @@
 #ifndef DOT_H
 #define DOT_H
 
+#include <iostream>
+
+using std::ostream;
+
 struct Dot{
     int x;
     int y;
@@ -21,5 +25,8 @@ struct Dot{
         this->x = x;
         this->y = y;
     }
+
+    friend ostream& operator<<(ostream &os, const Dot &dot);
 };
+
 #endif
