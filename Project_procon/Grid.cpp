@@ -21,15 +21,15 @@ Grid::Grid(int height, int width, int step)
 
     grid = new Mat(height * step, width * step, CV_8UC3, Scalar(255, 255, 255));
 
-    for (int x = 0; x < width; x++)
-    {
+    // for (int x = 0; x < width; x++)
+    // {
 
-        for (int y = 0; y < height; y++)
-        {
+    //     for (int y = 0; y < height; y++)
+    //     {
 
-            circle(*grid, Point(x * step, y * step), 2, Scalar(0, 0, 0), -1);
-        }
-    }
+    //         circle(*grid, Point(x * step, y * step), 2, Scalar(0, 0, 0), -1);
+    //     }
+    // }
 
     cout << "Init Grid successful" << endl;
 }

@@ -26,6 +26,7 @@ enum class SharedEdgeStyle {
 struct ValueIndex {
 
     Piece *piece;
+    Piece *transitionPiece;
     int indexPiece;
     bool flip; // Piece có flip hay không khi lắp vào
     SharedEdgeStyle styleShared;
@@ -35,6 +36,7 @@ struct ValueIndex {
     */
     int score;
     // public:
+    ValueIndex(Piece *, Piece *, int, bool);
     ValueIndex(Piece *, int, bool);
 };
 

@@ -28,6 +28,8 @@ int main(int argc, char **argv) {
         while (!pieces[i]->checkIsClockWise()) {
             cout << "T" << endl;
             pieces[i]->reverseDot(1, pieces[i]->getNumVertices()-1);
+            pieces[i]->calcAngle();
+            pieces[i]->calcSquareEdge();
         }
         // grid.showPiece(pieces[i]);
 
@@ -43,17 +45,30 @@ int main(int argc, char **argv) {
     // vect.push_back(result);
     // grid.showPieceSameTime(vect);
 
-    // Bot1 bot(numPieces, pieces);
-    // bot.preprocess();
-    Bot1 *bot = new Bot1(numPieces, pieces);
-    bot->preprocess();
+    bool modeBot1 = true;
+    Bot1 bot1(numPieces, pieces, frame);
+    bot1.run();
+
+    Bot *bot = new Bot(numPieces, frame, pieces);
+    //bot->run();
     cout << "Bot run completely." << endl;
 
     delete frame;
-    for (int i = 0; i < bot->getNumPieces(); i++) {
-        if(pieces[i] != NULL) delete pieces[i];
+
+    if (modeBot1) {
+        for (int i = 0; i < bot1.getNumPieces(); i++) {
+            if(pieces[i] != NULL) delete pieces[i];
+        }
+        cout << "Delete Pieces Done!" << endl;
+    }
+    else 
+    {
+        for (int i = 0; i < numPieces; i++) {
+            delete pieces[i];
+        }
     }
     delete[] pieces;
     delete bot;
+    cout << "Delete Bot done!";
     return 0;
 }

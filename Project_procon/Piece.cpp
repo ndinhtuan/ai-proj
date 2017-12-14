@@ -184,21 +184,31 @@ bool Piece::isRationalRatio(int index, ADJACENT_EDGE styleOfThis,
 
     int myEdge; // cạnh cần xét của Piece hiện tại.
     int otherEdge; // cạnh cần xét của otherPiece.
+    int tempIndex = index;
+    int tempOtherIndex = indexOfOtherPiece;
 
     switch (styleOfThis) {
         case NEXT_EDGE: myEdge = this->squareEdge[index]; break;
         case PREV_EDGE: 
-            myEdge = this->squareEdge[(index - 1 + this->numVertices) % this->numVertices]; break;
+            tempIndex = (index - 1 + this->numVertices) % this->numVertices;
+            myEdge = this->squareEdge[(index - 1 + this->numVertices) % this->numVertices]; 
+            break;
     }
 
     switch (styleOfOther) {
         case NEXT_EDGE: otherEdge = otherPiece->squareEdge[indexOfOtherPiece]; break;
         case PREV_EDGE: 
-            myEdge = otherPiece->squareEdge[(index - 1 + otherPiece->numVertices) % otherPiece->numVertices]; break;
+            tempOtherIndex = (indexOfOtherPiece - 1 + otherPiece->numVertices) % otherPiece->numVertices;
+            otherEdge = otherPiece->squareEdge[(indexOfOtherPiece - 1 + otherPiece->numVertices) % otherPiece->numVertices]; 
+            break;
     }
 
     int ucln = UCLN(myEdge, otherEdge);
-    cout << "MyEdge : " << myEdge << ". " << "OtherEdge : " << otherEdge << endl;
+    // cout << "Me : "; this->showEdge(); cout << *this;
+    // cout << "Other: "; otherPiece->showEdge(); cout << *otherPiece;
+    // cout << "Index : " << tempIndex  << " in " << this->numVertices
+    //      << ". " << "OtherIndex: " << tempOtherIndex << " in " << otherPiece->numVertices << endl;
+    // cout << "MyEdge : " << myEdge << ". " << "OtherEdge : " << otherEdge << endl;
 
     for (int i = 1; i <= ucln; i++) {
         
@@ -233,6 +243,7 @@ bool Piece::transition(Piece *mainPiece, int indexOfMainPiece, int myIndex, STYL
     //Piece *newPiece = new Piece(this->numVertices, this->id); // tạo ra Piece mới để trả về.
     assert(result != NULL);
     assert(styleFill != NOT_FILL);
+    assert(indexOfMainPiece >= 0 && myIndex >= 0);
     // Cần tìm 2 milestones để chuyển được cả Piece về vị trí mới.
     Dot *myOldMilestone1 = this->vertices[myIndex];
     Dot *mainMilestone1 = mainPiece->vertices[indexOfMainPiece];
@@ -298,13 +309,9 @@ bool Piece::transition(Piece *mainPiece, int indexOfMainPiece, int myIndex, STYL
             indexMilestone2 = (myIndex - 1 + this->numVertices)%this->numVertices;
         break;
     }
-   // cout << "FUCKKKKK" << endl;
     bool chooseOk = chooseNewTranformedPiece(myIndex, indexMilestone2, 
                 myNewMilestone1, myNewMilestone2, result);
     
-    if (chooseOk) cout << "choose ok" << endl; 
-    else cout << "choose deo ok" << endl;
-    // cout << "Insight " << *result << endl;
     delete myNewMilestone1;
     delete myNewMilestone2;
     return chooseOk;
@@ -568,10 +575,8 @@ void Piece::cloneSamePieceToMyMemory(Piece *ob) { // Test oke
 
 void Piece::assign(const Piece *ob) {
 
-    if (this->numVertices != 0) {
-        cout << "Fuck1" << endl;    
+    if (this->numVertices != 0) {  
         delete[] angles;
-        cout << "FUCK2" << endl;
         delete[] squareEdge;
         for (int i = 0; i < this->numVertices; i++) {
             delete vertices[i];
@@ -720,4 +725,95 @@ void Piece::unionOtherPiece(Piece *otherPiece, Piece* &result) {
     result->calcAngle();
     result->calcSquareEdge();
     result->eliminate3DotInLine();
+    
+    //for ()
+}
+
+void Piece::moveIfOutMap() {
+
+    int x = vertices[0]->x;
+    int y = vertices[0]->y;
+    Dot *minXVertice = vertices[0];
+    Dot *minYVertice = vertices[0];
+
+    for (int i = 1; i < numVertices; i++) {
+
+        if (x > vertices[i]->x) {
+            x = vertices[i]->x;
+            minXVertice = vertices[i];
+        }
+        if (y > vertices[i]->y) {
+            y = vertices[i]->y;
+            minXVertice = vertices[i];
+        }
+    }
+
+    if (x <= 0) {
+        Dot *tmp = new Dot(10 - x, 2);
+        this->move(tmp);
+        delete tmp;
+    }
+    if (y <= 0) {
+        Dot *tmp = new Dot(2, 10 - y);
+        this->move(tmp);
+        delete tmp;
+    }
+}
+
+void Piece::getHeightWidth(Frame *frame, int &height, int &width) {
+
+    int minX = frame->getVertices()[0]->x;
+    int maxX = frame->getVertices()[0]->x;
+    int minY = frame->getVertices()[0]->y;
+    int maxY = frame->getVertices()[0]->y;
+
+    for (int i = 1; i < frame->getNumVertices(); i++) {
+        if (minX > frame->getVertices()[i]->x) minX = frame->getVertices()[i]->x;
+        if (maxX < frame->getVertices()[i]->x) maxX = frame->getVertices()[i]->x;
+        if (minY > frame->getVertices()[i]->y) minY = frame->getVertices()[i]->y;
+        if (maxY < frame->getVertices()[i]->y) maxY = frame->getVertices()[i]->y;
+    }
+
+    height = abs(maxY - minY);
+    width = abs(maxX - minX);
+}
+
+bool Piece::comfortReference(Frame *frame) {
+
+    float threshold = 20;
+    int sum = 0;
+    int c = 0;
+    
+    for (int i = 0; i < numVertices; i++) {
+
+        if ((squareEdge[i] - threshold) < 0) return false;
+        if (abs(angles[i] - 270) <= EPSILON && 
+            abs(angles[(i + 1) % this->numVertices] - 270) <= EPSILON) {
+                sum += squareEdge[i];
+                c++;
+            }
+            else {
+                sum = 0; c = 0;
+            }
+        
+        if (c >= 2 && sum < 120) return false;
+    }
+
+    int minX = vertices[0]->x;
+    int maxX = vertices[0]->x;
+    int minY = vertices[0]->y;
+    int maxY = vertices[0]->y;
+
+    for (int i = 1; i < numVertices; i++) {
+        if (minX > vertices[i]->x) minX = vertices[i]->x;
+        if (maxX < vertices[i]->x) maxX = vertices[i]->x;
+        if (minY > vertices[i]->y) minY = vertices[i]->y;
+        if (maxY < vertices[i]->y) maxY = vertices[i]->y;
+    }
+
+    int h, w;
+    this->getHeightWidth(frame, h, w);
+    if (maxY - minY > h || maxX - minX > w) return false;
+
+    return true;
 }
