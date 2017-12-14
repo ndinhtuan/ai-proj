@@ -86,7 +86,9 @@ public:
     void move(Dot* a);
     void rotate90ClockWise(Dot* center);
     bool checkIsClockWise();
-
+    void moveIfOutMap();
+    bool comfortReference(Frame *);
+    void getHeightWidth(Frame *frame, int &height, int &width);
     /*
     + Theo thứ tự 3 đỉnh ABC (prev, đỉnh, next)
     + thuật : xBA / xCB = yBA / yCB

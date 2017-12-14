@@ -11,6 +11,10 @@
 
 using std::ostream;
 
+#include <vector>
+
+using std::vector;
+
 
 
 // Liệt kê thể loại cạnh tại một đỉnh (kề trước và kề kế tiếp).
@@ -65,6 +69,8 @@ public:
   void reverseDot(int begin, int end);
   void flip(Frame *result);
   void showAngles();
+  void showEdge();
+  int getPerimeter();
 
   static void calcSquareEdge(Frame *);
 
@@ -74,6 +80,8 @@ protected:
   int *squareEdge;
   int numVertices;
   int id;
+
+  vector<Frame*> consisting;
 };
 
 #endif

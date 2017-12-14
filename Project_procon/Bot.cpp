@@ -318,7 +318,7 @@ SIGNAL_BACKTRACK Bot::backtrack() {
         //Frame::calcSquareEdge(tmp); 
         cout << "Nhin day : " << tmp->getSquareEdge()[1] << endl;
         cout << "Nhin day : " << this->currAnswer->getAngles()[1] << endl;
-        grid->showPiece(this->currAnswer, 0);
+        grid->showPiece(this->currAnswer, 1000);
         cout << "Try done!" << endl;
         cout << *this->currAnswer << endl;
         //grid->showPiece(this->currAnswer, 0);

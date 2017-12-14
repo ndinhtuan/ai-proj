@@ -144,7 +144,9 @@ void Frame::calcSquareEdge() {
     {
 
         int nextPoint = (i + 1) % this->numVertices;
-        this->squareEdge[i] = (this->vertices[i]->x - this->vertices[nextPoint]->x) * (this->vertices[i]->x - this->vertices[nextPoint]->x) + (this->vertices[i]->y - this->vertices[nextPoint]->y) * (this->vertices[i]->y - this->vertices[nextPoint]->y);
+        this->squareEdge[i] = 
+                (this->vertices[i]->x - this->vertices[nextPoint]->x) * (this->vertices[i]->x - this->vertices[nextPoint]->x) 
+                  + (this->vertices[i]->y - this->vertices[nextPoint]->y) * (this->vertices[i]->y - this->vertices[nextPoint]->y);
     }
 }
 int Frame::getNumSpecialAngles()
@@ -370,4 +372,22 @@ void Frame::showAngles() {
     cout << this->angles[i] << ", ";
   }
   cout << endl;
+}
+
+void Frame::showEdge() {
+  for (int i = 0; i < this->numVertices; i++) {
+    cout << this->squareEdge[i] << ", ";
+  }
+  cout << endl;
+}
+
+int Frame::getPerimeter() {
+
+  int sum = 0;
+
+  for (int i = 0; i < this->numVertices; i++) {
+    sum += this->squareEdge[i];
+  }
+
+  return sum;
 }

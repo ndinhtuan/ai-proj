@@ -21,17 +21,17 @@ Grid::Grid(int height, int width, int step)
 
     grid = new Mat(height * step, width * step, CV_8UC3, Scalar(255, 255, 255));
 
-    for (int x = 0; x < width; x++)
-    {
+    // for (int x = 0; x < width; x++)
+    // {
 
-        for (int y = 0; y < height; y++)
-        {
+    //     for (int y = 0; y < height; y++)
+    //     {
 
-            circle(*grid, Point(x * step, y * step), 2, Scalar(0, 0, 0), -1);
-        }
-    }
+    //         circle(*grid, Point(x * step, y * step), 2, Scalar(0, 0, 0), -1);
+    //     }
+    // }
 
-    cout << "Init Grid successful" << endl;
+    //cout << "Init Grid successful" << endl;
 }
 
 Grid::~Grid()
@@ -64,7 +64,7 @@ void Grid::showPiece(const Frame *frame, int time)
     }
     imshow("Piece", img);
     waitKey(time);
-    destroyWindow("Piece");
+    //destroyWindow("Piece");
 }
 
 ostream &operator<<(ostream &os, const Grid &grid)
@@ -97,5 +97,5 @@ void Grid::showPieceSameTime(const vector<Frame *> &vectFrame, int time) {
 
     imshow("Piece", img);
     waitKey(time);
-    destroyWindow("Piece"); 
+    //destroyWindow("Piece"); 
 }

@@ -19,7 +19,7 @@ testBot.o: testBot.cpp
 	g++ -c testBot.cpp
 
 Bot1.o : Bot1.cpp Bot1.h 
-	g++ -c Bot1.cpp
+	g++ --std=c++11 -c Bot1.cpp
 Dot.o: Dot.cpp Dot.h 
 	g++ -c Dot.cpp
 
